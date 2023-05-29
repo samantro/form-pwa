@@ -1,22 +1,23 @@
 // service-worker.js
 
-self.addEventListener('install', event => {
+this.addEventListener('install', event => {
     event.waitUntil(
         caches.open('my-cache').then(cache => {
-            return cache.addAll([
+            cache.addAll([
                 // Add any static assets or URLs that you want to cache
                 "/form.js",
                 "/User.js",
                 "/App.js",
                 "/Index.js",
-                "/http://localhost:3000/static/js/bundle.js",
-                "/http://localhost:3000/manifest.json"
+                "/static/js/bundle.js",
+                "/manifest.json",
+                "/favicon.ico"
             ]);
         })
     );
 });
 
-self.addEventListener('fetch', event => {
+this.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request).then(response => {
             return response || fetch(event.request);
