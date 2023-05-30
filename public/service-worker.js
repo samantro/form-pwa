@@ -24,3 +24,19 @@ this.addEventListener('fetch', event => {
         })
     );
 });
+
+
+this.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    // Delete any outdated cache except the current cache
+                    if (cacheName !== 'my-cache') {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
+});

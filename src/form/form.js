@@ -120,7 +120,61 @@ const Form = () => {
                 }
             }
         }
-    }, 1000); // Sync every minute (adjust the interval as needed)
+    }, 60000); // Sync every minute (adjust the interval as needed)
+
+    // let isSyncing = false; // Flag to track sync status
+
+    // const syncDataWithServer = async () => {
+    //     // Check if already syncing
+    //     if (isSyncing) {
+    //         return;
+    //     }
+
+    //     // Set the sync flag to indicate syncing is in progress
+    //     isSyncing = true;
+
+    //     // Check if the browser is online
+    //     if (navigator.onLine) {
+    //         const cache = await caches.open('my-cache');
+    //         const cachedSubmissions = await cache.match('offline-submissions');
+
+    //         if (cachedSubmissions) {
+    //             let submissions = await cachedSubmissions.json();
+    //             for (const submission of submissions) {
+    //                 try {
+    //                     const response = await fetch('http://localhost:3001/user/', {
+    //                         method: 'POST',
+    //                         body: JSON.stringify(submission),
+    //                         headers: {
+    //                             'Content-Type': 'application/json'
+    //                         }
+    //                     });
+
+    //                     if (response.ok) {
+    //                         // Remove the synced submission from the cache
+    //                         const updatedSubmissions = submissions.filter(
+    //                             cachedSubmission => cachedSubmission !== submission
+    //                         );
+
+    //                         await cache.put(
+    //                             'offline-submissions',
+    //                             new Response(JSON.stringify(updatedSubmissions))
+    //                         );
+    //                         submissions = await cachedSubmissions.json();
+    //                     }
+    //                 } catch (error) {
+    //                     console.error('Error syncing form data:', error);
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     // Reset the sync flag to indicate syncing is completed
+    //     isSyncing = false;
+    // };
+
+    // Periodically check for internet connection and sync cached data
+    // setInterval(syncDataWithServer, 60000);
 
 
     const validateEmail = (email) => {
