@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import './User.css'; // Import the CSS file
 
-const User = () => {
+const User = (props) => {
     const [users, setUsers] = useState([]);
 
-    useEffect(() => {
-        // Fetch user data from the API
+    function fetchUsers() {
         fetch('http://localhost:3001/user/')
             .then(response => response.json())
             .then(data => setUsers(data))
             .catch(error => console.error('Error fetching users:', error));
+    }
+
+    useEffect(() => {
+        // Fetch user data from the API
+        fetchUsers();
     }, []);
 
     return (

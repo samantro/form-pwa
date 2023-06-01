@@ -17,12 +17,22 @@ this.addEventListener('install', event => {
     );
 });
 
+// this.addEventListener('fetch', event => {
+//     console.log("I am Fetch: ",event);
+//     event.respondWith(
+//         caches.match(event.request).then(response => {
+//             return response || fetch(event.request);
+//         })
+//     );
+// });
+
 this.addEventListener('fetch', event => {
+    console.log("Fetch:", event);
     event.respondWith(
         caches.match(event.request).then(response => {
             return response || fetch(event.request);
         })
-    );
+    )
 });
 
 
@@ -40,3 +50,4 @@ this.addEventListener('activate', event => {
         })
     );
 });
+  
