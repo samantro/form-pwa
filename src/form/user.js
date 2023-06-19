@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import './User.css'; // Import the CSS file
 
-const User = () => {
+const User = (props) => {
     const [users, setUsers] = useState([]);
 
+    async function fetchUsers() {
+        try {
+            var response = await fetch(`/api/user`);
+            if ('caches' in window) {
+                let cache = await caches.open('my-cache');
+                await cache.put('/api/user', response.clone());
+                console.log('Catch updated.');
+            }
+            var userRes = await response.json();
+            setUsers(userRes) 
+        }
+        catch(error) {
+            console.error('Error fetching users from network:', error);
+        }
+    }
+
     useEffect(() => {
-        // Fetch user data from the API
-        fetch('http://localhost:3001/user/')
-            .then(response => response.json())
-            .then(data => setUsers(data))
-            .catch(error => console.error('Error fetching users:', error));
+        fetchUsers();
+        // fetch('/api/user/').then(res=>res.json()).then(data=>setUsers(data)).catch(error=>console.error('Error fetching users:', error));
     }, []);
 
     return (
         <div className="all-users">
-            <h1>All Users</h1>
+            <h1>List of Users</h1>
             <div className="user-list">
                 {users.map(user => (
                     <div key={user.id} className="user-card">
@@ -26,7 +39,7 @@ const User = () => {
                 ))}
             </div>
         </div>
-    );
-};
+    )
+}
 
 export default User;

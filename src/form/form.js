@@ -1,181 +1,71 @@
 import "./form.css"
+import React, { useEffect, useState } from 'react';
+// const URL = window.location.origin;
 
-import React, { useState } from 'react';
 
 const Form = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         contact: '',
-        photoId: ''
+        photoId: {}
     });
-
+    const [online, setOnline] = useState(navigator.onLine);
     const [emailError, setEmailError] = useState('');
     const [contactError, setContactError] = useState('');
+    
+    setInterval(() => setOnline(navigator.onLine), 10*1000);
+
+    useEffect(() => {
+        console.log('Called use effect');
+        if(navigator.onLine)
+            updateCacheWhenOnline();
+    }, [online])
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = event => {
+    const handleSubmit = async event => {
         event.preventDefault();
 
         // Check if the browser is online
         if (navigator.onLine) {
-            // Perform online actions like posting data to the server
-            // Example code to post the form data to the server using fetch:
-            fetch('http://localhost:3001/user/', {
+            // Posting data to the server
+            // fetch(`${URL}/api/user/post`, {
+            fetch(`/api/user/post`, {
                 method: 'POST',
                 body: JSON.stringify(formData),
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-                .then(response => {
-                    // Handle the response from the server
-                    console.log('Form data submitted successfully!: ', response);
-                    setFormData({
-                        name: '',
-                        email: '',
-                        contact: '',
-                        photoId: ''
-                    });
-                })
-                .catch(error => {
-                    // Handle the error
-                    console.error('Error submitting form data:', error);
-                });
+            .then(response => {
+                console.log('Form data submitted successfully!: ', response);
+                setFormData({ name: '', email: '', contact: '', photoId: {} });
+                window.location.reload();
+            })
+            .catch(error => {
+                window.alert(error);
+                console.error('Error submitting form data:', error);
+            });
         } else {
             // Store the form data in the cache
-            // Store the form data in the cache
             if ('caches' in window) {
-                caches.open('my-cache').then(cache => {
-                    cache
-                        .match('offline-submissions')
-                        .then(response => {
-                            if (response) {
-                                // If there are already cached submissions, add the new form data to it
-                                return response.json();
-                            } else {
-                                // If there are no cached submissions, create a new array with the form data
-                                return [];
-                            }
-                        })
-                        .then(cachedSubmissions => {
-                            // Add the new form data to the cached submissions
-                            cachedSubmissions.push(formData);
-
-                            // Store the updated submissions in the cache
-                            cache.put('offline-submissions', new Response(JSON.stringify(cachedSubmissions)));
-                            setFormData({
-                                name: '',
-                                email: '',
-                                contact: '',
-                                photoId: ''
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error caching form data:', error);
-                        });
-                });
+                var cache = await caches.open('my-cache');
+                var response = await cache.match('offline-submissions')
+                var cachedSubmissions = (response) ? response.json() : [];
+                
+                // Add the new form data to the cached submissions
+                cachedSubmissions.push(formData);
+        
+                // Store the updated submissions in the cache
+                await cache.put('offline-submissions', new Response(JSON.stringify(cachedSubmissions)));
+                setFormData({ name: '', email: '', contact: '', photoId: {} });
+                console.log('Cache added in offline-submissions.');
             }
-            console.log('Form data cached successfully!');
         }
     };
-
-    // Periodically check for internet connection and sync cached data
-    setInterval(async () => {
-        if (navigator.onLine) {
-            // Attempt to sync the cached data with the server
-            const cache = await caches.open('my-cache');
-            const cachedSubmissions = await cache.match('offline-submissions');
-
-            if (cachedSubmissions) {
-                const submissions = await cachedSubmissions.json();
-
-                for (const submission of submissions) {
-                    try {
-                        const response = await fetch('http://localhost:3001/user/', {
-                            method: 'POST',
-                            body: JSON.stringify(submission),
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-
-                        if (response.ok) {
-                            // Remove the synced submission from the cache
-                            const updatedSubmissions = submissions.filter(
-                                cachedSubmission => cachedSubmission !== submission
-                            );
-
-                            await cache.put(
-                                'offline-submissions',
-                                new Response(JSON.stringify(updatedSubmissions))
-                            );
-                        }
-                    } catch (error) {
-                        console.error('Error syncing form data:', error);
-                    }
-                }
-            }
-        }
-    }, 60000); // Sync every minute (adjust the interval as needed)
-
-    // let isSyncing = false; // Flag to track sync status
-
-    // const syncDataWithServer = async () => {
-    //     // Check if already syncing
-    //     if (isSyncing) {
-    //         return;
-    //     }
-
-    //     // Set the sync flag to indicate syncing is in progress
-    //     isSyncing = true;
-
-    //     // Check if the browser is online
-    //     if (navigator.onLine) {
-    //         const cache = await caches.open('my-cache');
-    //         const cachedSubmissions = await cache.match('offline-submissions');
-
-    //         if (cachedSubmissions) {
-    //             let submissions = await cachedSubmissions.json();
-    //             for (const submission of submissions) {
-    //                 try {
-    //                     const response = await fetch('http://localhost:3001/user/', {
-    //                         method: 'POST',
-    //                         body: JSON.stringify(submission),
-    //                         headers: {
-    //                             'Content-Type': 'application/json'
-    //                         }
-    //                     });
-
-    //                     if (response.ok) {
-    //                         // Remove the synced submission from the cache
-    //                         const updatedSubmissions = submissions.filter(
-    //                             cachedSubmission => cachedSubmission !== submission
-    //                         );
-
-    //                         await cache.put(
-    //                             'offline-submissions',
-    //                             new Response(JSON.stringify(updatedSubmissions))
-    //                         );
-    //                         submissions = await cachedSubmissions.json();
-    //                     }
-    //                 } catch (error) {
-    //                     console.error('Error syncing form data:', error);
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     // Reset the sync flag to indicate syncing is completed
-    //     isSyncing = false;
-    // };
-
-    // Periodically check for internet connection and sync cached data
-    // setInterval(syncDataWithServer, 60000);
-
 
     const validateEmail = (email) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -212,6 +102,42 @@ const Form = () => {
         setFormData({ ...formData, photoId: file });
     };
 
+    async function updateCacheWhenOnline() {
+        // Attempt to sync the cached data with the server
+        console.log('Checking data in offline-submission cache.');
+        const cache = await caches.open('my-cache');
+        const cachedSubmissions = await cache.match('offline-submissions');
+    
+        if (cachedSubmissions) {
+            const submissionsArray = await cachedSubmissions.json();
+            if(submissionsArray.length) {
+                console.log('offline-submission has cache data.')
+                for (let submission of submissionsArray) {
+                    try {
+                        // const response = await fetch(`${URL}/api/user/post`, {
+                        const response = await fetch(`/api/user/post`, {
+                            method: 'POST',
+                            body: JSON.stringify(submission),
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) { // Remove the synced submission from the cache
+                            const updatedCache = await submissionsArray.filter( c => c !== submission);
+                            await cache.put( 'offline-submissions', new Response(JSON.stringify(updatedCache)));
+                        }
+                    } catch (error) {
+                        console.error('Error syncing form data:', error);
+                    }
+                }
+                let isDeleted = await cache.delete('offline-submissions')
+                console.log(`offline-submission cache cleared: ${isDeleted}`)
+                window.location.reload();
+            }
+        }
+    }
+
     return (
         <>
             <h1>Add User</h1>
@@ -246,7 +172,7 @@ const Form = () => {
                 </div>
                 <div>
                     <label htmlFor="photoId">Photo ID:</label>
-                    <input type="file" id="photoId" name="photoId" accept=".pdf, .jpg, .jpeg, .png" onChange={handlePhotoIdChange} required />
+                    <input type="file" id="photoId" name="photoId" accept=".pdf, .jpg, .jpeg, .png" onChange={handlePhotoIdChange} />
                 </div>
                 <button type="submit">Submit</button>
             </form>
